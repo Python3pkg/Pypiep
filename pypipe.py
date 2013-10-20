@@ -1,5 +1,6 @@
 import subprocess
 import re
+import collections
 
 def sh(cmd, shell=True):
     return Process(cmd, shell)
@@ -31,8 +32,13 @@ class Process(Stream):
 
     def __init__(self, cmd, shell=True):
         Stream.__init__(self)
-        if isinstance(cmd, str):
-            cmd = cmd.split()
+        if shell:
+            if not isinstance(cmd, str):
+                cmd = ' '.join(cmd)
+        else:
+            if isinstance(cmd, str):
+                cmd = cmd.split()
+
         self.__cmd = cmd
         self.__p = subprocess.Popen(cmd, shell=shell, stdout=subprocess.PIPE)
     
@@ -66,3 +72,38 @@ class Col(Stream):
         for line in self.__stream:
             cols = line.split(self.__sep)
             yield cols[col] if col < len(cols) else ''
+
+class Head(Stream):
+    def __init__(self, stream, line_num = 10):
+        Stream.__init__(self)
+        self.__stream = stream
+        self.__line_num = line_num 
+        
+    def __iter__(self):
+        for line_num, line in enumerate(self.__stream):
+            if line_num < self.__line_num:
+                yield line
+            
+class Tail(Stream):
+    def __init__(self, stream, line_num = 10):
+        Stream.__init__(self)
+        self.__stream = stream
+        self.__line_num = line_num 
+        
+    def __iter__(self):
+        last_lines = collections.deque()
+        stream_iter = iter(self.__stream)
+        while len(last_lines) < self.__line_num:
+            try:
+                last_lines.append(stream_iter.next())
+            except StopIteration:
+                break
+        
+        for line in stream_iter:
+            last_lines.popleft()
+            last_lines.append(line)
+
+        for line in last_lines:
+            yield line
+            
+            
