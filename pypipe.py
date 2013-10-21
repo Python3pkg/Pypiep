@@ -104,15 +104,14 @@ class Col(Stream):
 class Head(Stream):
     def __init__(self, stream, line_num = 10):
         Stream.__init__(self, stream)
-        self.__line_num = line_num 
+        self.__line_num = line_num if line_num > 0 else 10
         
     def _do_iter(self):
         for line_num, line in enumerate(self._stream):
             if line_num < self.__line_num:
                 yield line
-            else:
-                return
-
+                if line_num == self.__line_num - 1:
+                    return
             
 class Tail(Stream):
     def __init__(self, stream, line_num = 10):
