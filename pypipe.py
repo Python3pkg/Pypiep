@@ -21,15 +21,13 @@ class Stream(object):
     def __reg_class(self, cls):
         self._stream_classes[cls.__name__] = cls
         for subclass in cls.__subclasses__():
-            self._stream_classes[subclass.__name__] = subclass
             self.__reg_class(subclass)
 
     def __getattr__(self, name):
         cap_name = name.capitalize()
         if cap_name not in self._stream_classes:
             # try to update the inheritance hierarchy 
-            if not self._stream_classes:
-                self.__reg_class(Stream)
+            self.__reg_class(Stream)
         
         if cap_name in self._stream_classes:
             cls = self._stream_classes[cap_name]
