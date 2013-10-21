@@ -20,6 +20,8 @@ class Stream(object):
         self._stream = stream
         print stream.__class__.__name__, 'stream'
         
+        self.__is_end = False
+        
     def __reg_class(self, cls):
         self._stream_classes[cls.__name__] = cls
         for subclass in cls.__subclasses__():
@@ -37,6 +39,8 @@ class Stream(object):
     def __iter__(self):
         for elem in self._do_iter():
             yield elem
+            if self.__is_end:
+                break
         
         self._end_iter()
     
@@ -44,11 +48,13 @@ class Stream(object):
         raise NotImplemented
     
     def _end_iter(self):
-        self._do_end_iter()
-        print self.__class__.__name__, 'end iter'
-        if self._stream:
-            print 'call instream _end_iter' 
-            self._stream._end_iter()
+        if not self.__is_end:
+            self._do_end_iter()
+            print self.__class__.__name__, 'end iter'
+            if self._stream:
+                print 'call instream _end_iter' 
+                self._stream._end_iter()
+            self.__is_end = True
     
     def _do_end_iter(self):
         pass
