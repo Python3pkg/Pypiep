@@ -14,7 +14,6 @@ class Stream(object):
             self.__reg_class(Stream)
 
         self._stream = stream
-        print stream.__class__.__name__, 'stream'
         
         self.__is_end = False
         
@@ -50,9 +49,7 @@ class Stream(object):
     def _end_iter(self):
         if not self.__is_end:
             self._do_end_iter()
-            print self.__class__.__name__, 'end iter'
             if self._stream:
-                print 'call instream _end_iter' 
                 self._stream._end_iter()
             self.__is_end = True
     
@@ -73,18 +70,22 @@ class Sh(Stream):
                 cmd = cmd.split()
 
         self.__cmd = cmd
-        stdin_pipe = subprocess.PIPE if stream else None
+        if stream:
+            if isinstance(stream, Sh):
+                stdin_pipe = stream.get_process().stdout
+            else:
+                stdin_pipe = subprocess.PIPE
+        else:
+            stdin_pipe = None
         self.__p = subprocess.Popen(cmd, shell=shell, 
                                     stdin=stdin_pipe, stdout=subprocess.PIPE)
-        print 'hello'
         
     def get_process(self):
         return self.__p
     
     def _do_iter(self):
-        if self._stream:
+        if self._stream and not isinstance(self._stream, Sh):
             for line in self._stream:
-                print 'in sh:', line
                 self.__p.stdin.write(line)
             self.__p.stdin.close()
         
@@ -94,7 +95,6 @@ class Sh(Stream):
     def _do_end_iter(self):
         self.__p.stdout.close()
         self.__p.wait()
-        print self.__cmd, 'process done'
 
 class Grep(Stream):
     def __init__(self, stream, pattern):
