@@ -13,10 +13,6 @@ class Stream(object):
         if not self._stream_classes:
             self.__reg_class(Stream)
 
-        cls = self.__class__
-        if cls.__name__ not in self._stream_classes:
-            self.__reg_class(cls)
-        
         self._stream = stream
         print stream.__class__.__name__, 'stream'
         
@@ -30,11 +26,17 @@ class Stream(object):
 
     def __getattr__(self, name):
         cap_name = name.capitalize()
+        if cap_name not in self._stream_classes:
+            # try to update the inheritance hierarchy 
+            if not self._stream_classes:
+                self.__reg_class(Stream)
+        
         if cap_name in self._stream_classes:
             cls = self._stream_classes[cap_name]
             return lambda *args, **kwargs: cls(self, *args, **kwargs)
         else:
             return None
+
     
     def __iter__(self):
         for elem in self._do_iter():
