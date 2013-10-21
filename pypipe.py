@@ -21,6 +21,9 @@ class Stream(object):
         self._stream_classes[cls.__name__] = cls
         for subclass in cls.__subclasses__():
             self.__reg_class(subclass)
+    
+    def list(self):
+        return list(self)
 
     def __getattr__(self, name):
         cap_name = name.capitalize()
