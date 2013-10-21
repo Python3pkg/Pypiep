@@ -60,9 +60,6 @@ class Stream(object):
         pass
 
 class Process(Stream):
-    '''
-    classdocs
-    '''
 
     def __init__(self, stream, cmd, shell=True):
         Stream.__init__(self, stream)
@@ -96,16 +93,18 @@ class Grep(Stream):
                 yield elem
 
 class Col(Stream):
-    def __init__(self, stream, column, sep=' '):
+    def __init__(self, stream, column, sep=None, newline=True):
         Stream.__init__(self, stream)
         self.__column = column
         self.__sep = sep
+        self.__line_end = '\n' if newline else ''
     
     def _do_iter(self):
         col = self.__column
+        line_end = self.__line_end
         for line in self._stream:
             cols = line.split(self.__sep)
-            yield cols[col] if col < len(cols) else ''
+            yield (cols[col] if col < len(cols) else '') + line_end
 
 class Head(Stream):
     def __init__(self, stream, line_num = 10):
