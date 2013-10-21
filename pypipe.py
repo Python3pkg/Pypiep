@@ -4,7 +4,7 @@ import collections
 
 
 def sh(cmd, shell=True):
-    return Process(None, cmd, shell)
+    return Sh(None, cmd, shell)
 
 class Stream(object):
     _stream_classes = {}
@@ -59,7 +59,9 @@ class Stream(object):
     def _do_end_iter(self):
         pass
 
-class Process(Stream):
+class Sh(Stream):
+    ''' Run a shell program
+    '''
 
     def __init__(self, stream, cmd, shell=True):
         Stream.__init__(self, stream)
@@ -71,9 +73,21 @@ class Process(Stream):
                 cmd = cmd.split()
 
         self.__cmd = cmd
-        self.__p = subprocess.Popen(cmd, shell=shell, stdout=subprocess.PIPE)
+        stdin_pipe = subprocess.PIPE if stream else None
+        self.__p = subprocess.Popen(cmd, shell=shell, 
+                                    stdin=stdin_pipe, stdout=subprocess.PIPE)
+        print 'hello'
+        
+    def get_process(self):
+        return self.__p
     
     def _do_iter(self):
+        if self._stream:
+            for line in self._stream:
+                print 'in sh:', line
+                self.__p.stdin.write(line)
+            self.__p.stdin.close()
+        
         for line in self.__p.stdout.xreadlines():
             yield line
     
