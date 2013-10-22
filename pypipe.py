@@ -95,6 +95,7 @@ class Sh(Stream):
         return self.__p
     
     def _do_iter(self):
+        # TODO: fix this blocking issue
         if self._stream and not isinstance(self._stream, Sh):
             for line in self._stream:
                 self.__p.stdin.write(line)
@@ -163,3 +164,22 @@ class Tail(Stream):
 
         for line in last_lines:
             yield line
+
+class Filter(Stream):
+    def __init__(self, stream, func):
+        Stream.__init__(self, stream)
+        self.__func = func
+
+    def _do_iter(self):
+        for elem in self._stream:
+            if self.__func(elem):
+                yield elem
+
+class Map(Stream):
+    def __init__(self, stream, func):
+        Stream.__init__(self, stream)
+        self.__func = func
+
+    def _do_iter(self):
+        for elem in self._stream:
+            yield self.__func(elem)
