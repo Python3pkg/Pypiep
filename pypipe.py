@@ -13,7 +13,11 @@ class Stream(object):
         if not self._stream_classes:
             self.__reg_class(Stream)
 
-        self._stream = stream
+        if isinstance(stream, Stream):
+            self._stream = stream
+        else:
+            # assume it's a filename
+            self._stream = open(stream)
         
         self.__is_end = False
         
@@ -53,7 +57,11 @@ class Stream(object):
         if not self.__is_end:
             self._do_end_iter()
             if self._stream:
-                self._stream._end_iter()
+                if isinstance(self._stream, Stream):
+                    self._stream._end_iter()
+                else:
+                    # assume it's a file object
+                    self._stream.close()
             self.__is_end = True
     
     def _do_end_iter(self):
