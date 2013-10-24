@@ -13,7 +13,7 @@ class Stream(object):
         if not self._stream_classes:
             self.__reg_class(Stream)
 
-        if isinstance(stream, Stream):
+        if stream is None or isinstance(stream, Stream):
             self._stream = stream
         else:
             # assume it's a filename
