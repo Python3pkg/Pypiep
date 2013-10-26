@@ -1,6 +1,10 @@
 import subprocess
 import re
 import collections
+import fcntl
+import os
+import select
+import errno
 
 
 def sh(cmd, shell=True):
@@ -95,15 +99,81 @@ class Sh(Stream):
         return self.__p
     
     def _do_iter(self):
-        # TODO: fix this blocking issue
-        if self._stream and not isinstance(self._stream, Sh):
-            for line in self._stream:
-                self.__p.stdin.write(line)
-            self.__p.stdin.close()
+        if not self._stream or isinstance(self._stream, Sh):
+            for line in self.__p.stdout.xreadlines():
+                yield line
+            return
         
-        for line in self.__p.stdout.xreadlines():
-            yield line
-    
+        # if the self._stream is not an instance of Sh
+        val = fcntl.fcntl(self.__p.stdin, fcntl.F_GETFL)
+        fcntl.fcntl(self.__p.stdin, fcntl.F_SETFL, val | os.O_NONBLOCK)
+        
+        val = fcntl.fcntl(self.__p.stdout, fcntl.F_GETFL)
+        fcntl.fcntl(self.__p.stdout, fcntl.F_SETFL, val | os.O_NONBLOCK)
+
+        out_buf = ''
+        in_buf = ''
+        stream_it = iter(self._stream)
+        is_stream_end = False
+        rlist = [self.__p.stdout]
+        wlist = [self.__p.stdin]
+        while True:
+            rfds, wfds, _ = select.select(rlist, wlist, [])
+            
+            if self.__p.stdout in rfds:
+                # read things out
+                p_out = self.__p.stdout.read()
+                if len(p_out) == 0:
+                    i_start = 0
+                    while i_start < len(out_buf):
+                        i_new_line = out_buf.find('\n', i_start)
+                        if i_new_line == -1:
+                            yield out_buf[i_start:]
+                            break
+                        else:
+                            yield out_buf[i_start:(i_new_line + 1)]
+                            i_start = i_new_line + 1
+                    break # process exits, so we break the outer loop to quit
+                else:
+                    out_buf += p_out
+                    i_start = 0
+                    while i_start < len(out_buf):
+                        i_new_line = out_buf.find('\n', i_start)
+                        if i_new_line == -1:
+                            break
+                        else:
+                            yield out_buf[i_start:(i_new_line + 1)]
+                            i_start = i_new_line + 1
+                    if i_start == len(out_buf):
+                        out_buf = ''
+                    else:
+                        out_buf = out_buf[i_start:]
+            
+            if self.__p.stdin in wfds and not is_stream_end:
+                try:
+                    in_buf = stream_it.next()
+                except StopIteration:
+                    is_stream_end = True
+                    self.__p.stdin.close()
+                    wlist = []
+
+                while in_buf:
+                    # python has ignore SIGPIPE on startup,
+                    # so os.write will return EPIPE directly.
+                    try:
+                        #print 'write in_buf:', in_buf
+                        n = os.write(self.__p.stdin.fileno(), in_buf)
+                        in_buf = in_buf[n:]
+                    except IOError, e:
+                        if e.errno == errno.EPIPE:
+                            # stdin has been closed, so no need to write to it
+                            wlist = []
+                            break
+        
+        # before return, we close the stdin because we don't need it.
+        self.__p.stdin.close()
+        return 
+
     def _do_end_iter(self):
         self.__p.stdout.close()
         self.__p.wait()
