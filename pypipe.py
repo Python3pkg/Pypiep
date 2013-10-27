@@ -5,6 +5,7 @@ import fcntl
 import os
 import select
 import errno
+import signal
 
 
 def sh(cmd, shell=True):
@@ -92,8 +93,15 @@ class Sh(Stream):
                 stdin_pipe = subprocess.PIPE
         else:
             stdin_pipe = None
+            
         self.__p = subprocess.Popen(cmd, shell=shell, 
-                                    stdin=stdin_pipe, stdout=subprocess.PIPE)
+                                    stdin=stdin_pipe, stdout=subprocess.PIPE,
+                                    preexec_fn=self.__subprocess_setup)
+    
+    def __subprocess_setup(self):
+        # Python installs a SIGPIPE handler by default.
+        # This is usually not what non-Python subprocesses expect.
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         
     def get_process(self):
         return self.__p
