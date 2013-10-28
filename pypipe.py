@@ -44,7 +44,7 @@ class Stream(object):
             cls = self._stream_classes[cap_name]
             return lambda *args, **kwargs: cls(self, *args, **kwargs)
         else:
-            raise NotImplemented
+            raise NotImplementedError()
 
     
     def __iter__(self):
@@ -56,7 +56,7 @@ class Stream(object):
         self._end_iter()
     
     def _do_iter(self):
-        raise NotImplemented
+        raise NotImplementedError()
     
     def _end_iter(self):
         if not self.__is_end:
