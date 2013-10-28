@@ -44,7 +44,7 @@ class Stream(object):
             cls = self._stream_classes[cap_name]
             return lambda *args, **kwargs: cls(self, *args, **kwargs)
         else:
-            return None
+            raise NotImplemented
 
     
     def __iter__(self):
