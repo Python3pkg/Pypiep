@@ -71,6 +71,13 @@ class Stream(object):
     
     def _do_end_iter(self):
         pass
+    
+    def __len__(self):
+        cnt = 0
+        for _ in self:
+            cnt += 1
+        
+        return cnt
 
 class Sh(Stream):
     ''' Run a shell program
