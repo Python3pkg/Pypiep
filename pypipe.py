@@ -32,7 +32,7 @@ class Stream(object):
             self.__reg_class(subclass)
     
     def list(self):
-        return list(self)
+        return list(iter(self))
 
     def __getattr__(self, name):
         cap_name = name.capitalize()
