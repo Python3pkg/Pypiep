@@ -61,7 +61,7 @@ class Stream(object):
     def _end_iter(self):
         if not self.__is_end:
             self._do_end_iter()
-            if self._stream:
+            if self._stream is not None:
                 if isinstance(self._stream, Stream):
                     self._stream._end_iter()
                 else:
@@ -93,7 +93,7 @@ class Sh(Stream):
                 cmd = cmd.split()
 
         self.__cmd = cmd
-        if stream:
+        if stream is not None:
             if isinstance(stream, Sh):
                 stdin_pipe = stream.get_process().stdout
             else:
@@ -114,7 +114,7 @@ class Sh(Stream):
         return self.__p
     
     def _do_iter(self):
-        if not self._stream or isinstance(self._stream, Sh):
+        if self._stream is None or isinstance(self._stream, Sh):
             for line in self.__p.stdout.xreadlines():
                 yield line
             return
