@@ -5,9 +5,9 @@ import os
 
 class Test(unittest.TestCase):
 
-
     def setUp(self):
-        self._data_path = os.path.join(os.getcwd(), 'test_data')
+        cur_dir = os.path.dirname(__file__)
+        self._data_path = os.path.join(cur_dir, 'test_data')
 
 
     def tearDown(self):
