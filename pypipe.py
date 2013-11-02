@@ -165,12 +165,13 @@ class Sh(Stream):
                         out_buf = out_buf[i_start:]
             
             if self.__p.stdin in wfds and not is_stream_end:
-                try:
-                    in_buf = stream_it.next()
-                except StopIteration:
-                    is_stream_end = True
-                    self.__p.stdin.close()
-                    wlist = []
+                if len(in_buf) == 0:
+                    try:
+                        in_buf = stream_it.next()
+                    except StopIteration:
+                        is_stream_end = True
+                        self.__p.stdin.close()
+                        wlist = []
 
                 while in_buf:
                     # python has ignore SIGPIPE on startup,
@@ -179,10 +180,12 @@ class Sh(Stream):
                         #print 'write in_buf:', in_buf
                         n = os.write(self.__p.stdin.fileno(), in_buf)
                         in_buf = in_buf[n:]
-                    except IOError, e:
+                    except OSError, e:
                         if e.errno == errno.EPIPE:
                             # stdin has been closed, so no need to write to it
                             wlist = []
+                            break
+                        elif e.errno == errno.EAGAIN:
                             break
         
         # before return, we close the stdin because we don't need it.
