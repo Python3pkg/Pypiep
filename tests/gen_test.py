@@ -37,7 +37,8 @@ def gen_test_for_func(func):
     varnames = code_obj.co_varnames
     func_args = ', '.join(["'%s'" % var
                            for var in varnames[0:argcount]])
-    func_calling = '%s(%s)' % (func.func_name, func_args)
+    mod_name = func.func_globals['__name__']
+    func_calling = '%s.%s(%s)' % (mod_name, func.func_name, func_args)
     self_arg = 'self'
     assert_func = '%s.assertTrue(%s)' % (self_arg, func_calling)
     return _UT_METHOD_TEMPLATE % (func.func_name.capitalize(), assert_func)
