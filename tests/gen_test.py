@@ -33,8 +33,10 @@ def get_default_ut_setup_method():
 
 def gen_test_for_func(func):
     code_obj = func.func_code
-    func_args = ', '.join(["'arg%d'" % i
-                           for i in xrange(code_obj.co_argcount)])
+    argcount = code_obj.co_argcount
+    varnames = code_obj.co_varnames
+    func_args = ', '.join(["'%s'" % var
+                           for var in varnames[0:argcount]])
     func_calling = '%s(%s)' % (func.func_name, func_args)
     self_arg = 'self'
     assert_func = '%s.assertTrue(%s)' % (self_arg, func_calling)
@@ -42,8 +44,10 @@ def gen_test_for_func(func):
 
 def gen_test_for_method(cls_name, method_name, method):
     code_obj = method.func_code
-    method_args = ', '.join(["'arg%d'" % i
-                             for i in xrange(code_obj.co_argcount - 1)])
+    argcount = code_obj.co_argcount
+    varnames = code_obj.co_varnames
+    method_args = ', '.join(["'%s'" % var
+                             for var in varnames[1:argcount]])
     func_calling = '%s(%s)' % (method_name, method_args)
     obj_arg = 'self.%s' % cls_name
     assert_func = 'self.assertTrue(%s.%s)' % (obj_arg, func_calling)
@@ -58,8 +62,10 @@ def gen_test_for_ctor(cls):
     
     if '__init__' in cls.__dict__:
         func_code = cls.__dict__['__init__'].func_code
-        method_args = ', '.join(["'arg%d'" % i
-                                 for i in xrange(func_code.co_argcount - 1)])
+        argcount = func_code.co_argcount
+        varnames = func_code.co_varnames
+        method_args = ', '.join(["'%s'" % var
+                                 for var in varnames[1:argcount]])
     else:
         method_args = ''
     
