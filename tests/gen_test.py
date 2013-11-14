@@ -4,6 +4,7 @@ import types
 
 _UT_TEMPLATE = '''
 import unittest
+import %s
 
 
 class Test(unittest.TestCase):
@@ -104,6 +105,7 @@ def gen_test(target):
 if __name__ == '__main__':
     mod_name, obj_name = sys.argv[1:]
     
+    mod_nane = mod_name.split()[0]
     mod = __import__(mod_name)
     
     if obj_name == '@all': # special target meaning that tests everything.
@@ -115,12 +117,12 @@ if __name__ == '__main__':
                 except ValueError:
                     continue
         
-        print _UT_TEMPLATE % (get_default_ut_setup_method(),
+        print _UT_TEMPLATE % (mod_name, get_default_ut_setup_method(),
                               '\n'.join(test_methods))
     else:
         try:
             target = mod.__dict__[obj_name]
-            print _UT_TEMPLATE % (get_default_ut_setup_method(),
+            print _UT_TEMPLATE % (mod_name, get_default_ut_setup_method(),
                                   gen_test(target))
         except ValueError, e:
             print e
