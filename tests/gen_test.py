@@ -33,7 +33,10 @@ def get_default_ut_setup_method():
     return _UT_SETUP_METHOD_TEMPLATE % 'pass'
 
 def get_test_method_name(func_name):
-    return ''.join([elem.capitalize() for elem in func_name.split('_')])
+    return ''.join([elem[0].upper() + elem[1:] for elem in func_name.split('_')])
+
+def get_test_method_cls_name(cls_name):
+    return cls_name[0].upper() + cls_name[1:]
 
 def gen_test_for_func(func):
     code_obj = func.func_code
@@ -56,11 +59,11 @@ def gen_test_for_method(cls_name, method_name, method):
     func_calling = '%s(%s)' % (method_name, method_args)
     obj_arg = 'self.%s' % cls_name
     assert_func = 'self.assertTrue(%s.%s)' % (obj_arg, func_calling)
-    method_name = cls_name.capitalize() + method_name.capitalize()
+    method_name = cls_name + method_name.capitalize()
     return _UT_METHOD_TEMPLATE % (get_test_method_name(method_name), assert_func)
 
 def gen_test_for_ctor(cls):
-    method_name = cls.__name__.capitalize() + 'Ctor'
+    method_name = cls.__name__ + 'Ctor'
     test_code_tpl = \
 '''cls_obj = %s(%s)
         self.assertTrue(cls_obj)'''
