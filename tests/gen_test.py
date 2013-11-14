@@ -74,7 +74,8 @@ def gen_test_for_ctor(cls):
     else:
         method_args = ''
     
-    test_code = test_code_tpl % (cls.__name__, method_args)
+    ctor_call = '%s.%s' % (cls.__module__, cls.__name__)
+    test_code = test_code_tpl % (ctor_call, method_args)
     return _UT_METHOD_TEMPLATE % (method_name, test_code)
 
 def gen_test_for_special_method(cls_name, method_name, _):
