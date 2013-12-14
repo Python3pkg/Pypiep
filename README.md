@@ -21,7 +21,7 @@ To use pypipe, just import it, and use its sh as entry point, like the following
 import pypipe
 
 for line in pypipe.sh("find . -name *.py").grep('test').head(10):
-    # do whatever you want for each line
+    print line # do whatever you want for each line
 ```
 
 After you after call the `sh` function, you can use other useful tool like `grep` or `head` to chain the "pipeline",
