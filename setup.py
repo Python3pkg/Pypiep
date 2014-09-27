@@ -10,3 +10,4 @@ setup(name='Pypipe',
       url='https://github.com/airekans/Pypipe',
       py_modules=['pypipe']
      )
+
