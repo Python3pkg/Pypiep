@@ -115,7 +115,7 @@ class Sh(Stream):
     
     def _do_iter(self):
         if self._stream is None or isinstance(self._stream, Sh):
-            for line in self.__p.stdout.xreadlines():
+            for line in self.__p.stdout:
                 yield line
             return
         
@@ -167,7 +167,7 @@ class Sh(Stream):
             if self.__p.stdin in wfds and not is_stream_end:
                 if len(in_buf) == 0:
                     try:
-                        in_buf = stream_it.next()
+                        in_buf = next(stream_it)
                     except StopIteration:
                         is_stream_end = True
                         self.__p.stdin.close()
@@ -180,7 +180,7 @@ class Sh(Stream):
                         #print 'write in_buf:', in_buf
                         n = os.write(self.__p.stdin.fileno(), in_buf)
                         in_buf = in_buf[n:]
-                    except OSError, e:
+                    except OSError as e:
                         if e.errno == errno.EPIPE:
                             # stdin has been closed, so no need to write to it
                             wlist = []
@@ -242,7 +242,7 @@ class Tail(Stream):
         stream_iter = iter(self._stream)
         while len(last_lines) < self.__line_num:
             try:
-                last_lines.append(stream_iter.next())
+                last_lines.append(next(stream_iter))
             except StopIteration:
                 break
         

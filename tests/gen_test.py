@@ -39,19 +39,19 @@ def get_test_method_cls_name(cls_name):
     return cls_name[0].upper() + cls_name[1:]
 
 def gen_test_for_func(func):
-    code_obj = func.func_code
+    code_obj = func.__code__
     argcount = code_obj.co_argcount
     varnames = code_obj.co_varnames
     func_args = ', '.join(["'%s'" % var
                            for var in varnames[0:argcount]])
-    mod_name = func.func_globals['__name__']
-    func_calling = '%s.%s(%s)' % (mod_name, func.func_name, func_args)
+    mod_name = func.__globals__['__name__']
+    func_calling = '%s.%s(%s)' % (mod_name, func.__name__, func_args)
     self_arg = 'self'
     assert_func = '%s.assertTrue(%s)' % (self_arg, func_calling)
-    return _UT_METHOD_TEMPLATE % (get_test_method_name(func.func_name), assert_func)
+    return _UT_METHOD_TEMPLATE % (get_test_method_name(func.__name__), assert_func)
 
 def gen_test_for_method(cls_name, method_name, method):
-    code_obj = method.func_code
+    code_obj = method.__code__
     argcount = code_obj.co_argcount
     varnames = code_obj.co_varnames
     method_args = ', '.join(["'%s'" % var
@@ -69,7 +69,7 @@ def gen_test_for_ctor(cls):
         self.assertTrue(cls_obj)'''
     
     if '__init__' in cls.__dict__:
-        func_code = cls.__dict__['__init__'].func_code
+        func_code = cls.__dict__['__init__'].__code__
         argcount = func_code.co_argcount
         varnames = func_code.co_varnames
         method_args = ', '.join(["'%s'" % var
@@ -89,7 +89,7 @@ def gen_test_for_special_method(cls_name, method_name, _):
 def gen_tests_for_class(cls):
     test_methods = [gen_test_for_ctor(cls)]
     cls_name = cls.__name__
-    for attr_name, v in cls.__dict__.iteritems():
+    for attr_name, v in cls.__dict__.items():
         if not attr_name.startswith('_') and isinstance(v, types.FunctionType):
             test_methods.append(gen_test_for_method(cls_name, attr_name, v))
         elif attr_name.startswith('__') and attr_name.endswith('__') and \
@@ -107,7 +107,7 @@ def gen_test(target):
         # assume it's a class
         return gen_tests_for_class(target)
     else:
-        raise ValueError, 'not supported type'
+        raise ValueError('not supported type')
 
 if __name__ == '__main__':
     mod_name, obj_name = sys.argv[1:]
@@ -117,20 +117,20 @@ if __name__ == '__main__':
     
     if obj_name == '@all': # special target meaning that tests everything.
         test_methods = []
-        for k, v in mod.__dict__.iteritems():
+        for k, v in mod.__dict__.items():
             if not k.startswith('_'):
                 try:
                     test_methods.append(gen_test(v))
                 except ValueError:
                     continue
         
-        print _UT_TEMPLATE % (mod_name, get_default_ut_setup_method(),
-                              '\n'.join(test_methods))
+        print(_UT_TEMPLATE % (mod_name, get_default_ut_setup_method(),
+                              '\n'.join(test_methods)))
     else:
         try:
             target = mod.__dict__[obj_name]
-            print _UT_TEMPLATE % (mod_name, get_default_ut_setup_method(),
-                                  gen_test(target))
-        except ValueError, e:
-            print e
+            print(_UT_TEMPLATE % (mod_name, get_default_ut_setup_method(),
+                                  gen_test(target)))
+        except ValueError as e:
+            print(e)
             sys.exit(1)
